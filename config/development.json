@@ -1,0 +1,7 @@
+{
+	"kafka": {
+		"zkConnect": "192.168.33.10:2181",
+		"topic": "stocks"
+	},
+	"clientId": "kafka-sample-worker"
+}

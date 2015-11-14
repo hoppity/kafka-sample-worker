@@ -10,9 +10,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bunyan": "^1.5.1",
     "config-node": "^1.2.2",
     "kafka-node": "^0.2.29",
     "promise": "^7.0.4",
+    "redis": "^2.3.0",
     "yargs": "^3.29.0"
   }
 }

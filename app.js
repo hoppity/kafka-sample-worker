@@ -1,19 +1,23 @@
 var kafka = require('kafka-node'),
     Promise = require('promise'),
     config = require('config-node')(),
+    redis = require('redis'),
+    bunyan = require('bunyan'),
 
     clientId = config.clientId,
+    logLevel = config.logLevel || 'info',
+    log = bunyan.createLogger({ name: clientId, level: logLevel }),
 
-    client = new kafka.Client(config.kafka.zkConnect, clientId),
+    kafkaClient = new kafka.Client(config.kafka.zkConnect, clientId),
 
     consumer = new kafka.HighLevelConsumer(
-        client, [{
+        kafkaClient, [{
             topic: config.kafka.topic
         }], {
         //consumer group id
         groupId: clientId,
         // Auto commit config 
-        autoCommit: false,
+        autoCommit: true,
         autoCommitIntervalMs: 5000,
         // The max wait time is the maximum amount of time in milliseconds to block waiting if insufficient data is available at the time the request is issued, default 100ms 
         fetchMaxWaitMs: 100,
@@ -27,16 +31,27 @@ var kafka = require('kafka-node'),
         encoding: 'utf8'
     }),
 
+    redisClient = redis.createClient(),
+
     exit = function () {
         consumer.close(function () {
             process.exit();
         });
     };
 
-
 consumer.on('message', function (m) {
-    // todo: update redis
-    console.log(m);
+    log.debug(m, 'Received message.');
+    var value = JSON.parse(m.value);
+    redisClient.zadd([
+        'stock:' + value.item.name,
+        value._timestamp,
+        value.item.price
+    ], function (e, r) {
+        if (!e) return;
+
+        log.error(e);
+        exit();
+    })
 });
 
 consumer.on('error', function (e) {

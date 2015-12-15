@@ -31,7 +31,10 @@ var kafka = require('kafka-node'),
         encoding: 'utf8'
     }),
 
-    redisClient = redis.createClient(),
+    redisClient = redis.createClient({
+        host: config.redis.host,
+        port: config.redis.port
+    }),
 
     exit = function () {
         consumer.close(function () {
